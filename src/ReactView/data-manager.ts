@@ -9,7 +9,6 @@ export default class DataManager {
   }
 
   static setData(key: string, value: Record<string, any>) {
-    console.log(`key, value JD==> `, key, value);
     DataManager.data[key] = value;
     DataManager.sets[key]?.(value);
   }

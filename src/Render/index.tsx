@@ -19,17 +19,9 @@ function execute(method: { mode: 'expression'; expression: string }) {
   }
 }
 
-/**
-
-  1. 绑定关系
-  2. 设置值
-  3. 都得在初始化时执行
-
- */
-
 export default function Render(props: {
   schema: Schema;
-  initialVariablesData: Record<string, any>;
+  initialVariablesData?: Record<string, any>;
 }) {
   const { schema = demoSchema, initialVariablesData = {} } = props;
 
