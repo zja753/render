@@ -5,18 +5,16 @@ import modulesMap from './modules-map';
 import demoSchema from './schema';
 import VariableManager from './variable-manager';
 
-function execute(method: { mode: 'expression'; expression: string }) {
-  if (method.mode === 'expression') {
-    const pattern = /\{\{([^}]+)\}\}/g; // 匹配双花括号内的内容
-    const connectedVariables: string[] = [];
-    const value = method.expression.replace(pattern, (match, key) => {
-      connectedVariables.push(key.split('.')[0]);
-      // 使用 key 在 data 中查找对应的值
-      return get(VariableManager.data, key);
-    });
-
-    return { value, connectedVariables };
-  }
+function executeExpression(expression: string) {
+  console.log(`expression JD==> `, expression);
+  const pattern = /\{\{([^}]+)\}\}/g; // 匹配双花括号内的内容
+  const connectedVariables: string[] = [];
+  const value = expression.replace(pattern, (match, key) => {
+    connectedVariables.push(key.split('.')[0]);
+    // 使用 key 在 data 中查找对应的值
+    return get(VariableManager.data, key);
+  });
+  return { value, connectedVariables };
 }
 
 export default function Render(props: {
@@ -27,16 +25,20 @@ export default function Render(props: {
 
   /** 注册变量和实际组件之间的链接 */
   useMemo(() => {
-    VariableManager.reset();
     schema.elements.forEach((el) => {
       Object.entries(el.props).forEach(([propName, val]) => {
-        if (val.$$__type === 'subscription') {
+        if (
+          val.$$__type === 'subscription' &&
+          val.$$__body.mode === 'expression'
+        ) {
           // 注册变量和实际组件之间的链接
-          execute(val.$$__body)!.connectedVariables.forEach((variableName) => {
+          executeExpression(
+            val.$$__body.expression,
+          )!.connectedVariables.forEach((variableName) => {
             VariableManager.registerSet(variableName, (variableValue) => {
               DataManager.setData(el.id, {
                 ...DataManager.getData(el.id),
-                [propName]: execute(val.$$__body)!.value,
+                [propName]: executeExpression(val.$$__body.expression)!.value,
               });
             });
           });
@@ -65,6 +67,43 @@ export default function Render(props: {
       } else if (variable.type === 'String') {
         VariableManager.setData(variable.name, String(value));
       }
+    });
+  }, []);
+
+  /** 解析所有方法，传给对应组件 */
+  useMemo(() => {
+    schema.elements.forEach((el) => {
+      // 转化所有属性配置里的 builtin 函数为真实JS函数
+      Object.entries(el.props).forEach(([propName, val]) => {
+        if (
+          val.$$__type === 'Builtin.Function' &&
+          val.$$__body.mode === 'function'
+        ) {
+          DataManager.setData(el.id, {
+            ...DataManager.getData(el.id),
+            [propName]: () =>
+              new Function('VariableManager', val.$$__body.code)(
+                VariableManager,
+              ),
+          });
+        }
+      });
+      // 转化所有生命周期里的 builtin 函数为真实JS函数
+      el.lifeCycle &&
+        Object.entries(el.lifeCycle).forEach(([propName, val]) => {
+          if (
+            val.$$__type === 'Builtin.Function' &&
+            val.$$__body.mode === 'function'
+          ) {
+            DataManager.setData(el.id, {
+              ...DataManager.getData(el.id),
+              [`lifeCycle_${propName}`]: () =>
+                new Function('VariableManager', val.$$__body.code)(
+                  VariableManager,
+                ),
+            });
+          }
+        });
     });
   }, []);
 

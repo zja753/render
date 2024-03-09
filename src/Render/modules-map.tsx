@@ -6,7 +6,17 @@ const Container: FC<any> = ({ children, style }) => {
 };
 
 const CustomButton: FC<any> = ({ text, ...others }) => {
-  return <Button {...others}>{text}</Button>;
+  console.log(`others JD==> `, others);
+  return (
+    <Button
+      onClick={() => {
+        console.log(`JD==> ???`);
+      }}
+      {...others}
+    >
+      {text}
+    </Button>
+  );
 };
 
 const Text: FC<any> = ({ text, ...others }) => {

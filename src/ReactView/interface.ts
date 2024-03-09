@@ -1,9 +1,21 @@
 import { FC } from 'react';
 
+export type BuiltinFunction = {
+  $$__type: 'Builtin.Function';
+  $$__body: {
+    mode: 'function';
+    code: string;
+  };
+};
+
 export type Element = {
   id: string;
   type: string;
   props: Record<string, any>;
+  lifeCycle?: {
+    onMounted?: BuiltinFunction;
+    onUnmount?: BuiltinFunction;
+  };
 };
 
 export interface Schema {

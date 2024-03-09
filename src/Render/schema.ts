@@ -46,6 +46,15 @@ const schema: Schema = {
             expression: '{{btnTitle}}',
           },
         },
+        onClick: {
+          $$__type: 'Builtin.Function',
+          $$__body: {
+            mode: 'function',
+            code: `
+              VariableManager.mergeData('cardInfo', {content: '变了变了'})
+            `,
+          },
+        },
       },
     },
     {
@@ -57,6 +66,17 @@ const schema: Schema = {
           $$__body: {
             mode: 'expression',
             expression: '这是卡片内容：{{cardInfo.content}}',
+          },
+        },
+      },
+      lifeCycle: {
+        onMounted: {
+          $$__type: 'Builtin.Function',
+          $$__body: {
+            mode: 'function',
+            code: `
+              VariableManager.mergeData('cardInfo', {content: 'onMounted 初始化函数执行，我是 text1'})
+            `,
           },
         },
       },
